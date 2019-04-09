@@ -1,0 +1,2 @@
+﻿  main.cpp
+c:\users\alisa\source\repos\tree\tree\tree.h(43): error C4703: используется потенциально неинициализированная локальная переменная-указатель "ptr1"
