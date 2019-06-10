@@ -59,17 +59,18 @@ public:
 	bool IsAmericanFormat() const { return AmericanFormat; }
 	bool IsAfterMidnight() const { return AfterMidnight; }
 
-	void ForwardSwitch() {
-		EuropeanFormat = false;
-		AmericanFormat = true;
+	void Switch() {
+		if (EuropeanFormat) {
+			EuropeanFormat = false;
+			AmericanFormat = true;
+		}
+		else {
+			EuropeanFormat = true;
+			AmericanFormat = false;
+		}
 	}
 
-	void ReverseSwitch() {
-		EuropeanFormat = true;
-		AmericanFormat = false;
-	}
-
-	unsigned int GetDateInDays() const;
+	//unsigned int GetDateInDays() const;
 
 private:
 	unsigned int Hours;
@@ -100,7 +101,7 @@ public:
 	unsigned int GetMonth() const { return Month; }
 	unsigned int GetYear() const { return Year; }
 
-	unsigned int GetDateInDays() const;
+	//unsigned int GetDateInDays() const;
 
 private:
 	unsigned int Hours;
@@ -111,228 +112,15 @@ private:
 
 };
 
-struct Date {
-	unsigned int Day;
-	unsigned int Month;
-	unsigned int Year;
-
-	Date(unsigned int d, unsigned int m, unsigned int y) : Day(d), Month(m), Year(y) {}
-};
-
 std::ostream& operator<<(std::ostream& os, const Time& time);
 std::ostream& operator<<(std::ostream& os, const TimeInterval& time_interval);
 
-unsigned int NumberOfDaysInMonth(const unsigned int& month) {
-	if (month == 2) {
-		return 28;
-	}
-	else {
-		if (month == 4 || month == 6 || month == 9 || month == 11) {
-			return 30;
-		}
-		else {
-			return 31;
-		}
-	}
-}
+bool TimeIsCorrect(const unsigned int& ms, const unsigned int& h, const unsigned int& d, const unsigned int& m, const unsigned int& y);
 
-bool DateIsCorrect(const Date& date) {
-	if (date.Day <= NumberOfDaysInMonth(date.Month) && date.Month <= 12) {
-		return true;
-	}
-	else {
-		return false;
-	}
-}
+Time operator+(const Time& T_lhs, const TimeInterval& TI_rhs);
+Time operator-(const Time& T_lhs, const TimeInterval& TI_rhs);
 
-Date CreateValidDate(const unsigned int& d, const unsigned int& m, const unsigned int& y) {
-	Date new_date(d, m, y);
+TimeInterval operator-(const Time& lhs, const Time& rhs);
 
-	if (DateIsCorrect(new_date)) {
-		return new_date;
-	}
-	else {
-		if (new_date.Month > 12) {
-			new_date.Month -= 12;
-			new_date.Year += 1;
-		}
-		else {
-			auto num_of_days = NumberOfDaysInMonth(new_date.Month);
-			if (new_date.Day > num_of_days) {
-				new_date.Day -= num_of_days;
-				new_date.Month += 1;
-				//if (DateIsCorrect(new_date)) {
-					//return new_date;
-				//}
-				//else {
-					return CreateValidDate(new_date.Day, new_date.Month, new_date.Year);
-				//}
-			}
-		}
-	}
-
-//	if (new_date.Month > 12) {
-//		new_date.Month -= 12;
-//		new_date.Year += 1;
-//	}
-//	else {
-//		unsigned int nums_of_days = NumberOfDaysInMonth(new_date.Month);
-//		if (new_date.Day > nums_of_days) {
-//			new_date.Day -= nums_of_days;
-//			new_date.Month += 1;
-//		}
-//		else {
-//			new_date = CreateValidDate(new_date.Day, new_date.Month, new_date.Year);
-//		}
-//	}
-//	return new_date;
-}
-
-inline Time operator+(const Time& T_lhs, const TimeInterval& TI_rhs) {
-	unsigned int new_minutes = T_lhs.GetMinutes() + TI_rhs.GetMinutes();
-	unsigned int new_hours = T_lhs.GetHours() + TI_rhs.GetHours();
-	unsigned int new_day = T_lhs.GetDay() + TI_rhs.GetDay();
-	unsigned int new_month = T_lhs.GetMonth() + TI_rhs.GetMonth();
-	unsigned int new_year = T_lhs.GetYear() + TI_rhs.GetYear();
-	if (new_minutes > 59) {
-		new_minutes -= 60;
-		new_hours += 1;
-	}
-	else {
-		if (new_hours > 23) {
-			new_hours -= 24;
-			new_day += 1;
-		}
-		else {
-			Date valid_date = CreateValidDate(new_day, new_month, new_year);
-			new_day = valid_date.Day;
-			new_month = valid_date.Month;
-			new_year = valid_date.Year;
-		}
-	}
-
-	return Time(Hours(new_hours), Minutes(new_minutes), Day(new_day), Month(new_month), Year(new_year));
-}
-
-inline Time operator-(const Time& T_lhs, const TimeInterval& TI_rhs) {
-	if (T_lhs.GetYear() >= TI_rhs.GetYear()) {
-		unsigned int new_minutes = T_lhs.GetMinutes() - TI_rhs.GetMinutes();
-		unsigned int new_hours = T_lhs.GetHours() - TI_rhs.GetHours();
-		unsigned int new_day = T_lhs.GetDay() - TI_rhs.GetDay();
-		unsigned int new_month = T_lhs.GetMonth() - TI_rhs.GetMonth();
-		unsigned int new_year = T_lhs.GetYear() - TI_rhs.GetYear();
-		if (new_minutes > 59) {
-			new_minutes -= 60;
-			new_hours += 1;
-		}
-		else {
-			if (new_hours > 23) {
-				new_hours -= 24;
-				new_day += 1;
-			}
-			else {
-				Date valid_date = CreateValidDate(new_day, new_month, new_year);
-				new_day = valid_date.Day;
-				new_month = valid_date.Month;
-				new_year = valid_date.Year;
-			}
-		}
-
-		return Time(Hours(new_hours), Minutes(new_minutes), Day(new_day), Month(new_month), Year(new_year));
-	}
-	else {
-		return Time(Hours(0), Minutes(0), Day(0), Month(0), Year(0));
-	}
-}
-
-inline TimeInterval operator-(const Time& lhs, const Time& rhs) {
-	if (lhs.GetHours() >= rhs.GetHours() && lhs.GetMinutes() >= rhs.GetMinutes() &&
-		lhs.GetDay() >= rhs.GetDay() && lhs.GetMonth() >= rhs.GetMonth() &&
-		lhs.GetYear() >= rhs.GetYear()) {
-		unsigned int new_minutes = lhs.GetMinutes() - rhs.GetMinutes();
-		unsigned int new_hours = lhs.GetHours() - rhs.GetHours();
-		unsigned int new_day = lhs.GetDay() - rhs.GetDay();
-		unsigned int new_month = lhs.GetMonth() - rhs.GetMonth();
-		unsigned int new_year = lhs.GetYear() - rhs.GetYear();
-		if (new_minutes > 59) {
-			new_minutes -= 60;
-			new_hours += 1;
-		}
-		else {
-			if (new_hours > 23) {
-				new_hours -= 24;
-				new_day += 1;
-			}
-			else {
-				Date valid_date = CreateValidDate(new_day, new_month, new_year);
-				new_day = valid_date.Day;
-				new_month = valid_date.Month;
-				new_year = valid_date.Year;
-			}
-		}
-
-		return TimeInterval(Hours(new_hours), Minutes(new_minutes), Day(new_day), Month(new_month), Year(new_year));
-	}
-	else {
-		return TimeInterval(Hours(0), Minutes(0), Day(0), Month(0), Year(0));
-	}
-}
-
-inline TimeInterval operator+(const TimeInterval& lhs, const TimeInterval& rhs) {
-	unsigned int new_minutes = lhs.GetMinutes() + rhs.GetMinutes();
-	unsigned int new_hours = lhs.GetHours() + rhs.GetHours();
-	unsigned int new_day = lhs.GetDay() + rhs.GetDay();
-	unsigned int new_month = lhs.GetMonth() + rhs.GetMonth();
-	unsigned int new_year = lhs.GetYear() + rhs.GetYear();
-	if (new_minutes > 59) {
-		new_minutes -= 60;
-		new_hours += 1;
-	}
-	else {
-		if (new_hours > 23) {
-			new_hours -= 24;
-			new_day += 1;
-		}
-		else {
-			Date valid_date = CreateValidDate(new_day, new_month, new_year);
-			new_day = valid_date.Day;
-			new_month = valid_date.Month;
-			new_year = valid_date.Year;
-		}
-	}
-
-	return TimeInterval(Hours(new_hours), Minutes(new_minutes), Day(new_day), Month(new_month), Year(new_year));
-}
-
-inline TimeInterval operator-(const TimeInterval& lhs, const TimeInterval& rhs) {
-	if (lhs.GetHours() >= rhs.GetHours() && lhs.GetMinutes() >= rhs.GetMinutes() &&
-		lhs.GetDay() >= rhs.GetDay() && lhs.GetMonth() >= rhs.GetMonth() &&
-		lhs.GetYear() >= rhs.GetYear()) {
-		unsigned int new_minutes = lhs.GetMinutes() - rhs.GetMinutes();
-		unsigned int new_hours = lhs.GetHours() - rhs.GetHours();
-		unsigned int new_day = lhs.GetDay() - rhs.GetDay();
-		unsigned int new_month = lhs.GetMonth() - rhs.GetMonth();
-		unsigned int new_year = lhs.GetYear() - rhs.GetYear();
-		if (new_minutes > 59) {
-			new_minutes -= 60;
-			new_hours += 1;
-		}
-		else {
-			if (new_hours > 23) {
-				new_hours -= 24;
-				new_day += 1;
-			}
-			else {
-				Date valid_date = CreateValidDate(new_day, new_month, new_year);
-				new_day = valid_date.Day;
-				new_month = valid_date.Month;
-				new_year = valid_date.Year;
-			}
-		}
-
-		return TimeInterval(Hours(new_hours), Minutes(new_minutes), Day(new_day), Month(new_month), Year(new_year));
-	}
-	else {
-		return TimeInterval(Hours(0), Minutes(0), Day(0), Month(0), Year(0));
-	}
-}
+TimeInterval operator+(const TimeInterval& lhs, const TimeInterval& rhs);
+TimeInterval operator-(const TimeInterval& lhs, const TimeInterval& rhs);
